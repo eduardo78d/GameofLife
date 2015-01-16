@@ -1,4 +1,8 @@
-import threading #The Theread is Just for Display the Matrix
+#!/usr/bin/env python. 
+# -*- coding: utf-8 -*-
+__author__ = "Eduardo Ismael García Pérez"
+
+import threading 
 import time
 
 Matriz_Blinker  = [	
@@ -30,10 +34,10 @@ class GameOfLife(threading.Thread):
 
 	def __init__(self, matrix):
 		self.neighborList = [ (0,-1), (1,-1), (1,0), (1,1), (0,1), (-1,1), (-1,0), (-1,-1)]
-		self.lifeGame = True
 		self.matrix  = matrix
+		self.loop =0
+		self.max_loop = 10
 		threading.Thread.__init__(self)
-
 
 	def showMatrix(self):
 		print "\n"
@@ -41,54 +45,37 @@ class GameOfLife(threading.Thread):
 			print listRow
 
 	def run(self):
-		populationDead = 0
-		max_lopp = 0
-
-		while self.lifeGame and max_lopp < 10: # In casa that you have a infinite matrix
-			matrixNewG = []	
-			for posX in range(0, len(self.matrix)):
-				listRowNewG = []
-				for posY in range(0, len(self.matrix[posX])):
-					
-					numberOfL = self.getListNeighborL(posX, posY)
-					
-					if self.matrix[posX][posY]:
-						if  numberOfL == 2 or numberOfL==3:
-							listRowNewG.append(1)
-						else:
-							listRowNewG.append(0)
-							populationDead+=1
-					else:
-						if  numberOfL == 3:
-							listRowNewG.append(1)
-						else:
-							listRowNewG.append(0)
-							populationDead+=1
-				
-				matrixNewG.append(listRowNewG)
-
+		while  self.loop < self.max_loop:
 			self.showMatrix()
+			self.matrix = self.__round()
+			time.sleep(1)
+			self.loop+=1
 
-			if populationDead == (len(self.matrix) * len(self.matrix[0]) ):
-				self.lifeGame = False
-			else:
-				populationDead=0
-				self.matrix = matrixNewG
-			
-			time.sleep(1) #No neccessary for the Algorithm
-			max_lopp+=1 #No neccessary for the Algorithm
-		
-	def getListNeighborL(self, posX, posY):
-		count = 0
-		for valor in self.neighborList:
-			try:
-				if  posX + valor[0] >= 0 and posY + valor[1] >= 0:
-					if self.matrix[ posX + valor[0] ][ posY + valor[1] ] == 1:
-						count +=1
-			except Exception, e:
-				pass
-		return count
-		
+	def __round(self):
+		matrix = []
+		for posX in range(0, len( self.matrix ) ):
+			list_row =[]
+			for posY in range(0, len( self.matrix[posX])):
+				list_row.append(  self.__algorithm( self.__getListNeighbor(posX, posY).count(1), posX, posY ) )
+			matrix.append(list_row)	
+		return matrix
 
-Game = GameOfLife( Matriz_Beacon )
+
+	def __algorithm(self, neighborsALive, posX, posY):
+		if neighborsALive == 3 or (neighborsALive == 2 and self.matrix[posX][posY]):
+			return 1
+		return 0
+
+	def __getListNeighbor(self, posX, posY):
+		listNeighbor = []
+		for posxNeighbor,posyNeighbor in self.neighborList:
+			if self.__is_posValid( posX + posxNeighbor ,  posY + posyNeighbor , len(self.matrix), len( self.matrix[posX])):
+				listNeighbor.append ( self.matrix[ posX + posxNeighbor ][ posY + posyNeighbor ] )
+		return listNeighbor
+
+	def __is_posValid(self, posX, posY , size_row, size_column):
+		return posX in range( size_row ) and posY in range( size_column )
+
+
+Game = GameOfLife( Matriz_Blinker )
 Game.start()
